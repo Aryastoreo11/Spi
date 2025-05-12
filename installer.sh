@@ -44,15 +44,23 @@ mv FiraCodeNerdFont-Regular.ttf ~/.termux/font.ttf
 rm -rf FiraCode.zip
 termux-reload-settings
 
+# Backup dan hapus .zshrc lama untuk menghindari error
+msg "Membackup dan menghapus .zshrc lama..."
+[ -f ~/.zshrc ] && mv ~/.zshrc ~/.zshrc.bak
+touch ~/.zshrc
+
 # Konfigurasi Zsh dengan custom prompt
 msg "Mengkonfigurasi Zsh..."
 cat > ~/.zshrc << 'EOL'
+# Path ke Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
+
+# Tema
 ZSH_THEME="agnoster"
 
-# Fungsi untuk menampilkan status baterai
+# Fungsi untuk status baterai
 battery_status() {
-    if command -v termux-battery-status >/dev/null; then
+    if command -v termux-battery-status >/dev/null 2>&1; then
         battery=$(termux-battery-status | grep percentage | awk '{print $2}' | tr -d ',')
         if [ "$battery" -ge 80 ]; then
             echo "🔋 $battery%"
@@ -67,9 +75,12 @@ battery_status() {
 }
 
 # Custom prompt dengan jam, tanggal, dan baterai
-PROMPT='%{$fg[cyan]%}%n@%m %{$fg[yellow]%}[%D{%Y-%m-%d} %T] %{$fg[green]%}$(battery_status)%{$reset_color%} %{$fg[blue]%}%~%{$reset_color%} $ '
+PROMPT='%F{cyan}%n@%m%f %F{yellow}[%D{%Y-%m-%d} %T]%f %F{green}$(battery_status)%f %F{blue}%~%f $ '
 
+# Plugin
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+
+# Load Oh My Zsh
 source $ZSH/oh-my-zsh.sh
 EOL
 
@@ -82,6 +93,7 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 msg "Mengubah shell default ke Zsh..."
 chsh -s "$(command -v zsh)"
 echo '[[ -n $PS1 && -z $ZSH_VERSION ]] && exec zsh' >> ~/.bashrc
+mkdir -p ~/.termux/termux.properties.d
 echo 'exec zsh' > ~/.termux/termux.properties.d/startup.sh
 
 # Konfigurasi Termux properties
@@ -109,4 +121,4 @@ msg "Membersihkan cache..."
 pkg autoclean
 
 msg "Instalasi selesai! Silakan restart Termux untuk melihat perubahan."
-msg "Zsh akan berjalan otomatis saat Termux dibuka."
+msg "Zsh akan berjalan otomatis dengan tampilan jam, tanggal, dan baterai."
